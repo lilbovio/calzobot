@@ -67,6 +67,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(0xff0000)
             .setTitle('🚨 Usuario enviado a Jail')
+            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .setDescription(`🔹 **Usuario:** <@${user.id}>\n🔹 **Tiempo:** ${cantidad}${tiempoMatch[2]}\n🔹 **Razón:** ${razon}`)
             .setFooter({ text: 'El usuario será liberado automáticamente al finalizar el tiempo.' });
 
