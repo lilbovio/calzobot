@@ -5,7 +5,8 @@ const jailSchema = new mongoose.Schema({
     guildId: { type: String, required: true },
     rolesPrevios: { type: [String], required: true },
     razon: { type: String, default: 'No especificada' },
-    liberacion: { type: Number, required: true }
+    liberacion: { type: Number, required: true },
+    timesJailed: { type: Number, default: 1 } // Nuevo campo para contar los jail
 });
 
 module.exports = mongoose.model('Jail', jailSchema);
