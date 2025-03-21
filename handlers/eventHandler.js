@@ -24,7 +24,14 @@ module.exports = (client) => {
         if (event.once) {
             client.once(event.name, (...args) => event.execute(...args));
         } else {
-            client.on(event.name, (...args) => event.execute(...args));
+            // Verifica si la función `execute` espera `client`
+            client.on(event.name, (...args) => {
+                if (event.execute.length > args.length) {
+                    event.execute(client, ...args);
+                } else {
+                    event.execute(...args);
+                }
+            });
         }
     }
 };

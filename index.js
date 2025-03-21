@@ -6,10 +6,12 @@ const path = require('path');
 const mongoose = require('mongoose');
 const config = require('./config.json');
 
-const loadEvents = require('handlers/commandHandler.js');
+const loadEvents = require('./handlers/eventHandler.js');
+const { Partials } = require('discord.js');
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+    //partials: [Partials.Message]
 });
 
 client.commands = new Collection();

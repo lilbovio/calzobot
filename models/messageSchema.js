@@ -6,8 +6,8 @@ const messageSchema = new mongoose.Schema({
     authorID: String,
     authorTag: String,
     channelID: String,
-    guildID: String,
-    timestamp: { type: Date, default: Date.now }
+    guildID: String/*,
+    timestamp: { type: Date, default: Date.now }*/
 });
 
 module.exports = mongoose.model('Message', messageSchema);
