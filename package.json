@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.4.7",
+    "git": "^0.1.5",
+    "moment": "^2.30.1",
+    "mongodb": "^6.14.0",
+    "mongoose": "^8.11.0"
+  }
+}
