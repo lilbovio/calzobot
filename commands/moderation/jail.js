@@ -68,10 +68,12 @@ module.exports = {
             .setColor(0xff0000)
             .setTitle('🚨 Usuario enviado a Jail 🚨')
             .setThumbnail(user.displayAvatarURL({ dynamic: true }))
-            .setDescription(`🔹 **Usuario:** <@${user.id}>\n🔹`)
+            .setDescription(`🔹 **Usuario:** <@${user.id}>`)
             .addFields(
-                { name: `⏰ **Tiempo:** ${cantidad}${tiempoMatch[2]}`},
-                { name: `📌 **Razon** ${razon}`},
+                { name: '👮 Moderador', value: `<@${interaction.user.id}>`, inline: true },
+                { name: `⏰ **Tiempo:**`, value: `${cantidad}${tiempoMatch[2]}`, inline: true},
+                { name: `📌 **Razon**`, value: `${razon}`, inline: true},
+                { name: '📅 **Fecha de liberación**', value: `<t:${Math.floor((Date.now() + tiempoMs) / 1000)}:R>` }
             )
             .setFooter({ text: 'El usuario será liberado automáticamente al finalizar el tiempo.' });
 
