@@ -70,13 +70,12 @@ module.exports = {
             .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .setDescription(`🔹 **Usuario:** <@${user.id}>\n🔹`)
             .addFields(
-                { name: '👮 **Moderador**', value: `<@${interaction.user.id}>`, inline: true },
                 { name: `⏰ **Tiempo:** ${cantidad}${tiempoMatch[2]}`},
                 { name: `📌 **Razon** ${razon}`},
             )
             .setFooter({ text: 'El usuario será liberado automáticamente al finalizar el tiempo.' });
 
-        interaction.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed] });
 
         // Configurar la liberación
         setTimeout(async () => {
