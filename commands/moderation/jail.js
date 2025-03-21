@@ -66,9 +66,14 @@ module.exports = {
         // Crear Embed
         const embed = new EmbedBuilder()
             .setColor(0xff0000)
-            .setTitle('🚨 Usuario enviado a Jail')
+            .setTitle('🚨 Usuario enviado a Jail 🚨')
             .setThumbnail(user.displayAvatarURL({ dynamic: true }))
-            .setDescription(`🔹 **Usuario:** <@${user.id}>\n🔹 **Tiempo:** ${cantidad}${tiempoMatch[2]}\n🔹 **Razón:** ${razon}`)
+            .setDescription(`🔹 **Usuario:** <@${user.id}>\n🔹`)
+            .addFields(
+                { name: '👮 **Moderador**', value: `<@${interaction.user.id}>`, inline: true },
+                { name: `⏰ **Tiempo:** ${cantidad}${tiempoMatch[2]}`},
+                { name: `📌 **Razon** ${razon}`},
+            )
             .setFooter({ text: 'El usuario será liberado automáticamente al finalizar el tiempo.' });
 
         interaction.reply({ embeds: [embed] });
