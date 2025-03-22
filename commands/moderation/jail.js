@@ -25,9 +25,6 @@ module.exports = {
         const razon = interaction.options.getString('razon') || 'No especificada';
         const jailRoleId = require('../../config.json').JAIL_ROLE_ID;
         const member = interaction.guild.members.cache.get(user.id);
-        const botRole = interaction.guild.members.me.roles.highest;
-        const userRole = interaction.guild.members.cache.get(user.id).roles.highest;
-        let jailData = await Jail.findOne({ userId: user.id, guildId: interaction.guild.id });
 
         if (user.id === interaction.user.id) {
             return interaction.reply({ content: "❌ No puedes jailearte a ti mismo.", ephemeral: true });
@@ -35,26 +32,6 @@ module.exports = {
 
         if (!member) {
             return interaction.reply({ content: '❌ No se pudo encontrar al usuario.', ephemeral: true });
-        }
-
-        if (userRole.position >= botRole.position) {
-            return interaction.reply({
-                content: "❌ Este usuario está por encima de mí, no puedo hacer eso."
-            });
-        }
-        if (jailData) {
-            // Si ya existe, aumentar el contador
-            jailData.timesJailed += 1;
-            await jailData.save();
-        } else {
-            // Si es la primera vez, crear el registro
-            jailData = await Jail.create({
-                userId: user.id,
-                guildId: interaction.guild.id,
-                reason,
-                moderatorId: interaction.user.id,
-                timesJailed: 1
-            });
         }
 
         // 🔹 Convertir el tiempo ingresado a milisegundos
@@ -73,6 +50,7 @@ module.exports = {
 
         // Guardar roles previos antes de quitar
         const rolesPrevios = member.roles.cache.map(role => role.id);
+        console.log(rolesPrevios);
 
         // Remover todos los roles y añadir el de Jail
         await member.roles.set([jailRoleId]);
@@ -88,20 +66,19 @@ module.exports = {
 
         // Crear Embed
         const embed = new EmbedBuilder()
-            .setColor(0xff0000)
-            .setTitle('🚨 Usuario enviado a Jail 🚨')
-            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
-            .setDescription(`🔹 **Usuario:** <@${user.id}>`)
-            .addFields(
-                { name: '👮 Moderador', value: `<@${interaction.user.id}>`, inline: true },
-                { name: `⏰ **Tiempo:**`, value: `${cantidad}${tiempoMatch[2]}`, inline: true},
-                { name: `📌 **Razon**`, value: `${razon}`, inline: true},
-                { name: '📅 **Fecha de liberación**', value: `<t:${Math.floor((Date.now() + tiempoMs) / 1000)}:R>` },
-                { name: '🔄 Veces en Jail', value: `${jailData.timesJailed}`, inline: true }
-            )
-            .setFooter({ text: 'El usuario será liberado automáticamente al finalizar el tiempo.' });
+        .setColor(0xff0000)
+        .setTitle('🚨 Usuario enviado a Jail 🚨')
+        .setThumbnail(user.displayAvatarURL({ dynamic: true }))
+        .setDescription(`🔹 **Usuario:** <@${user.id}>`)
+        .addFields(
+            { name: '👮 Moderador', value: `<@${interaction.user.id}>`, inline: true },
+            { name: `⏰ **Tiempo:**`, value: `${cantidad}${tiempoMatch[2]}`, inline: true},
+            { name: `📌 **Razon**`, value: `${razon}`, inline: true},
+            { name: '📅 **Fecha de liberación**', value: `<t:${Math.floor((Date.now() + tiempoMs) / 1000)}:R>` },
+        )
+        .setFooter({ text: 'El usuario será liberado automáticamente al finalizar el tiempo.' });
 
-        await interaction.reply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed] });
 
         // Configurar la liberación
         setTimeout(async () => {
