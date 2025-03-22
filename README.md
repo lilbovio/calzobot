@@ -8,3 +8,5 @@ El token instalado en este repositorio pertenece al de calzotest, por seguridad 
 q mas 
 no ya
 bnas noches
+
+prueba para el webhook de actualizaciones en discord
