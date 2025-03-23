@@ -10,8 +10,12 @@ const loadEvents = require('./handlers/eventHandler.js');
 const { Partials } = require('discord.js');
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
-    //partials: [Partials.Message]
+    intents: [ GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ],
+    partials: [ Partials.Message ]
 });
 
 client.commands = new Collection();
