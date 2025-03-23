@@ -13,8 +13,9 @@ module.exports = {
 
         const guild = client.guilds.cache.get(oldMessage.guildId);
         const channel = guild.channels.cache.get(oldMessage.channelId);
-        const dbMessage = Message.findOne({messageID: oldMessage.id});
-        const author = oldMessage.author;
+
+        const dbMessage = await Message.findOne({messageID: oldMessage.id});
+        const author = (await guild.members.fetch(dbMessage.authorID)).user;
 
         const auditoryChannel = guild.channels.cache.get(
             require('../../config.json').AUDITORY_CHANNEL_ID
@@ -30,7 +31,10 @@ module.exports = {
         });
 
         try {
-            await Message.deleteOne({ messageID: oldMessage.id });
+            await Message.updateOne(
+                { messageID: oldMessage.id }, // filtro
+                { $set: { content: newMessage.content }} // nueva info
+            );
         } catch (e) {
             console.err(e);
         }
