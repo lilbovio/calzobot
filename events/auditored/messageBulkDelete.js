@@ -1,4 +1,4 @@
-const { Events, EmbedBuilder } = require('discord.js');
+const { Events } = require('discord.js');
 
 const Message = require('../../models/messageSchema');
 
@@ -11,12 +11,11 @@ module.exports = {
             return; // Ignorar el canal de logs
         }
 
-
         //messages.forEach(async (value, key) => {
         //    await Message.deleteOne({ messageId: value.id });
         //});
         const messageIDs = Array.from(messages.keys()); // Extraer los IDs de los mensajes de la coleccion
-        await MessageModel.deleteMany({ messageID: { $in: messageIDs } });
+        await Message.deleteMany({ messageID: { $in: messageIDs } });
 
         const count = messages.size;
 
