@@ -22,7 +22,7 @@ module.exports = {
             
             auditoryChannel.send({embeds:
                 [{
-                    description: "<@" + author.id + "> **edito** el canal " + newChannel.url + "\nAntes: " + oldChannel.name,
+                    description: "<@" + author.id + "> **edito** el canal " + newChannel.url + "\nAntes: " + oldChannel.name + "\nDespues: " + newChannel.name,
                     author: { name: author.username, icon_url: author.displayAvatarURL() },
                     footer: { text: "ID de Autor: " + author.id + " | ID del canal: " + newChannel.id },
                     color: 0x1F99E3
