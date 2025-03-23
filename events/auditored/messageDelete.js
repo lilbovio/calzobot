@@ -1,6 +1,5 @@
 const { Events } = require('discord.js');
 
-
 const Message = require('../../models/messageSchema');
 
 module.exports = {

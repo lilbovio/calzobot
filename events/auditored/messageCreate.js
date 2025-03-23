@@ -11,8 +11,6 @@ module.exports = {
             return; // Ignorar el canal de logs
         }
         
-        console.log(message.content)
-
         const messageReceived = new Message({
             messageID: message.id,
             content: message.content,
