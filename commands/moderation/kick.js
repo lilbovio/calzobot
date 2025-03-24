@@ -4,7 +4,7 @@ const config = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('ban')
+        .setName('kick')
         .setDescription('Banea a un usuario del servidor con opción de tiempo y borrado de mensajes.')
         .addUserOption(option =>
             option.setName('usuario')
