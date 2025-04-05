@@ -10,12 +10,8 @@ const loadEvents = require('./handlers/eventHandler.js');
 const { Partials } = require('discord.js');
 
 const client = new Client({
-    intents: [ GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ],
-    partials: [ Partials.Message ]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+    //partials: [Partials.Message]
 });
 
 client.commands = new Collection();
@@ -45,7 +41,7 @@ client.once('ready', async () => {
             .setColor(0x00ff00)
             .setTitle("✅ Bot Encendido")
             .setDescription(`**Funcionando correctamente**\n📌 **Cargados:** ${client.commands.size} comandos\n📶 **Ping:** ${client.ws.ping}ms`)
-            .setTimestamp();
+            .setTimestamp(); 
         logChannel.send({ embeds: [embed] });
     }
     client.user.setPresence({
