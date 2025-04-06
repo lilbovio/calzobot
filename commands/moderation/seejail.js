@@ -12,6 +12,9 @@ module.exports = {
 
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true }); // 🔹 Defer para evitar timeout
+            if (!interaction.member.roles.cache.some(role => config.MOD_ROLES.includes(role.id))) {
+                return interaction.reply({ content: "❌ No tienes permisos para usar este comando.", ephemeral: true });
+            }
         
         const user = interaction.options.getUser('usuario');
         const jailData = await Jail.findOne({ userId: user.id, guildId: interaction.guild.id });
