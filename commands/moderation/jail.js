@@ -25,6 +25,7 @@ module.exports = {
         const razon = interaction.options.getString('razon') || 'No especificada';
         const jailRoleId = require('../../config.json').JAIL_ROLE_ID;
         const member = interaction.guild.members.cache.get(user.id);
+        const ROLE_PERSISTENTE = '1338628605231501413';
 
         if (user.id === interaction.user.id) {
             return interaction.reply({ content: "❌ No puedes jailearte a ti mismo.", ephemeral: true });
@@ -52,17 +53,31 @@ module.exports = {
         const rolesPrevios = member.roles.cache.map(role => role.id);
         console.log(rolesPrevios);
 
-        // Remover todos los roles y añadir el de Jail
-        await member.roles.set([jailRoleId]);
+        // 🔹 Mantener el rol persistente si lo tiene
+        const nuevosRoles = member.roles.cache.has(ROLE_PERSISTENTE)
+            ? [jailRoleId, ROLE_PERSISTENTE]
+            : [jailRoleId];
 
-        // Guardar en la base de datos
-        await Jail.create({
-            userId: user.id,
-            guildId: interaction.guild.id,
-            rolesPrevios: rolesPrevios,
-            razon: razon,
-            liberacion: Date.now() + tiempoMs
-        });
+        await member.roles.set(nuevosRoles);
+
+        // 🔹 Guardar o actualizar Jail en la base de datos
+        const existingJail = await Jail.findOne({ userId: user.id, guildId: interaction.guild.id });
+        if (existingJail) {
+            existingJail.rolesPrevios = rolesPrevios;
+            existingJail.razon = razon;
+            existingJail.liberacion = Date.now() + tiempoMs;
+            existingJail.timesJailed += 1;
+            await existingJail.save();
+        } else {
+            await Jail.create({
+                userId: user.id,
+                guildId: interaction.guild.id,
+                rolesPrevios: rolesPrevios,
+                razon: razon,
+                liberacion: Date.now() + tiempoMs,
+                timesJailed: 1
+            });
+        }
 
         // Crear Embed
         const embed = new EmbedBuilder()
