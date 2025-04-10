@@ -45,7 +45,7 @@ client.once('ready', async () => {
         logChannel.send({ embeds: [embed] });
     }
     client.user.setPresence({
-        activities: [{ name: 'Bro respeta...', type: 0 }], // Cambia el nombre del estado
+        activities: [{ name: 'Bro maceta...', type: 0 }], // Cambia el nombre del estado
         status: 'dnd' // Opciones: 'online', 'idle', 'dnd' (No molestar), 'invisible'
     });
     
