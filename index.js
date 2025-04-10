@@ -35,7 +35,7 @@ loadEvents(client);
 
 client.once('ready', async () => {
     console.log(`✅ Bot iniciado como ${client.user.tag}`);
-    const logChannel = client.channels.cache.get("1350367520766296115");
+    const logChannel = client.channels.cache.get("1355785307081150575");
     if (logChannel) {
         const embed = new EmbedBuilder()
             .setColor(0x00ff00)
@@ -45,7 +45,7 @@ client.once('ready', async () => {
         logChannel.send({ embeds: [embed] });
     }
     client.user.setPresence({
-        activities: [{ name: 'AerioHost!', type: 0 }], // Cambia el nombre del estado
+        activities: [{ name: 'Calzoski!', type: 0 }], // Cambia el nombre del estado
         status: 'dnd' // Opciones: 'online', 'idle', 'dnd' (No molestar), 'invisible'
     });
     

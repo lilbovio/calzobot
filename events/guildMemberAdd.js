@@ -18,7 +18,10 @@ module.exports = {
             .setColor('Green')
             .setTimestamp();
 
-        if (welcomeData.image) embed.setImage(welcomeData.image);
+        // Si está activado lo de la imagen, usa la foto de perfil del usuario como thumbnail
+        if (welcomeData.image) {
+            embed.setThumbnail(member.user.displayAvatarURL({ dynamic: true }));
+        }
 
         welcomeChannel.send({ content: `<@${member.id}>`, embeds: [embed] });
     }

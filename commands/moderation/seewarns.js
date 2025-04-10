@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Warn = require('../../models/warnSchema');
+const config = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()

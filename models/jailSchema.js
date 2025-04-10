@@ -6,6 +6,7 @@ const jailSchema = new mongoose.Schema({
     rolesPrevios: { type: [String], required: true },
     razon: { type: String, default: 'No especificada' },
     liberacion: { type: Date, required: true },
+    activo: { type: Boolean, default: true },
     timesJailed: { type: Number, default: 1 } // Nuevo campo para contar los jail
 });
 
