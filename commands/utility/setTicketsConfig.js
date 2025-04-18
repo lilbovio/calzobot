@@ -42,9 +42,28 @@ module.exports = {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle("🎫 Crear ticket")
+            .setTitle("🎫 Abrir un ticket")
             .setDescription(
-                "Para abrir un nuevo ticket selecciona el tipo de ticket que quieres aquí"
+                "# ¿Cómo Funcionan los Tickets en Nuestro Servidor?\n" +
+                "¡Hola a todos! Queremos asegurarnos de que comprendan cómo utilizar nuestro sistema de tickets para resolver dudas, quejas o apelaciones de manera efectiva.\n" +
+                "\n" +
+                "## ¿Qué Son los Tickets?\n" +
+                "Los tickets nos permiten manejar tus inquietudes de manera ordenada y privada. Puedes abrir un ticket si necesitas ayuda con:\n" +
+                "**Dudas:** Consultas sobre el funcionamiento del servidor o sus reglas.\n" +
+                "**Quejas o reportes:** Reportar comportamientos inapropiados o problemas en el servidor.\n" +
+                "**Bugs y fallos:** Avisar o pedir ayuda sobre un error o bug de alguna función en el servidor o del bot.\n" +
+                "**Apelaciones:** Apelar un warn o mute que consideres injusto.\n" +
+                "\n" +
+                "## ¿Como crear un ticket?\n" +
+                "Aca abajo puedes ver un menu de selección, puedes presionarlo para luego elegir el tipo de ticket que quieres abrir, luego de eleggir el ticket se generara se automaticamente.\n" +
+                "\n" +
+                "## ¿Qué hago ya en el ticket?\n" +
+                "### Describe tu Inquietud\n" +
+                "Describe detalladamente tu queja, duda o apelación. Proporciona toda la información relevante, incluyendo capturas de pantalla si es necesario.\n" +
+                "Espera a que un miembro del equipo de soporte revise tu ticket y pueda responder lo antes posible.\n" + 
+                "Te mantendremos informado durante todo el proceso y trabajaremos contigo para resolver el problema.\n" +
+                "\n" +
+                "***Además pedimos que evites hacer pings.***"
             )
             .setColor(0xD49E69);
 
