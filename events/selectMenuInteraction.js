@@ -35,7 +35,7 @@ module.exports = {
     
             const channelMembers = [];
     
-            const channelMembersIds = require('../config.json').MOD_ROLES; // Se agregan los roles del staff
+            const channelMembersIds = [ ...require('../config.json').MOD_ROLES ]; // Se agregan los roles del staff
             channelMembersIds.push(user.id); // Se agrega al usuario
     
             for (let i = 0; i < (channelMembersIds.length); i++) {
