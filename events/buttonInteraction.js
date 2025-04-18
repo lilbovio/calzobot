@@ -55,7 +55,54 @@ module.exports = {
                 interaction.message.delete();
             } 
             else if (value == "claim") {
-                interaction.reply("Aun en construcción...");
+                const channel = interaction.channel;
+                const member = interaction.member;
+
+                const modRolesIds = [ ...require('../config.json').MOD_ROLES ];
+
+                if (!modRolesIds.some(role => 
+                    member.roles.cache.has(role)
+                )) {
+                    return interaction.reply({
+                        content: "Solo un miembro del staff puede usar este botón!\n||Si eres parte del staff y no puedes usarlo, alerta a un administrador!||",
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+
+                await channel.permissionOverwrites.edit(user.id, {SendMessages: true });
+
+
+                const modRolesIdsUnknown = [];
+                for (let i = 0; i < modRolesIds.length; i++) {
+                    try {
+                        await channel.permissionOverwrites.edit(modRolesIds[i], { SendMessages: false });
+                    } catch(e) {
+                        modRolesIdsUnknown.push(modRolesIds[i])
+                    }
+                }
+
+                console.warn("Supplied parameter is not a User nor a Role: " + modRolesIdsUnknown.toString());
+
+                const newButtons = [
+                    new ButtonBuilder({
+                        custom_id: 'ticket_claim',
+                        style: ButtonStyle.Secondary,
+                        label: "Reclamado por " + user.username + "!"
+                    }).setDisabled(true),
+                    new ButtonBuilder({
+                        custom_id: 'ticket_close',
+                        style: ButtonStyle.Danger,
+                        label: 'Cerrar'
+                    })
+                ]
+
+                const row = new ActionRowBuilder();
+                row.addComponents(newButtons);
+
+                interaction.update({
+                    content: interaction.message.content,
+                    components: [ row ]
+                })
             }
         }
     }
