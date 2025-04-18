@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Warn = require('../../models/warnSchema');
+const config = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,6 +13,9 @@ module.exports = {
 
     async execute(interaction) {
         const user = interaction.options.getUser('usuario');
+        if (!interaction.member.roles.cache.some(role => config.MOD_ROLES.includes(role.id))) {
+            return interaction.reply({ content: "❌ No tienes permisos para usar este comando.", ephemeral: true });
+            }
 
         // Buscar warns en la base de datos
         const warns = await Warn.find({ userId: user.id, guildId: interaction.guild.id });

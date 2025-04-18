@@ -10,12 +10,8 @@ const loadEvents = require('./handlers/eventHandler.js');
 const { Partials } = require('discord.js');
 
 const client = new Client({
-    intents: [ GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ],
-    partials: [ Partials.Message ]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+    //partials: [Partials.Message]
 });
 
 client.commands = new Collection();
@@ -39,17 +35,17 @@ loadEvents(client);
 
 client.once('ready', async () => {
     console.log(`✅ Bot iniciado como ${client.user.tag}`);
-    const logChannel = client.channels.cache.get("1350367520766296115");
+    const logChannel = client.channels.cache.get("1355785307081150575");
     if (logChannel) {
         const embed = new EmbedBuilder()
             .setColor(0x00ff00)
             .setTitle("✅ Bot Encendido")
             .setDescription(`**Funcionando correctamente**\n📌 **Cargados:** ${client.commands.size} comandos\n📶 **Ping:** ${client.ws.ping}ms`)
-            .setTimestamp();
+            .setTimestamp(); 
         logChannel.send({ embeds: [embed] });
     }
     client.user.setPresence({
-        activities: [{ name: 'AerioHost!', type: 0 }], // Cambia el nombre del estado
+        activities: [{ name: 'Bro maceta...', type: 0 }], // Cambia el nombre del estado
         status: 'dnd' // Opciones: 'online', 'idle', 'dnd' (No molestar), 'invisible'
     });
     

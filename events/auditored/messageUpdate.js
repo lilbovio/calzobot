@@ -1,42 +1,43 @@
 const { Events } = require('discord.js');
-
 const Message = require('../../models/messageSchema');
 
 module.exports = {
     name: Events.MessageUpdate,
-    async execute(client, oldMessage, newMessage) {
-        if (!oldMessage.guild) return; // Ignorar DMs
-        
-        if (oldMessage.channel.id == require('../../config.json').AUDITORY_CHANNEL_ID) {
-            return; // Ignorar el canal de logs
-        }
+    async execute(oldMessage, newMessage) {
+        if (!oldMessage.guild) return;
 
-        const guild = client.guilds.cache.get(oldMessage.guildId);
+        const config = require('../../config.json');
+        if (oldMessage.channel.id === config.AUDITORY_CHANNEL_ID) return;
+
+        const guild = oldMessage.guild;
         const channel = guild.channels.cache.get(oldMessage.channelId);
 
-        const dbMessage = await Message.findOne({messageID: oldMessage.id});
-        const author = (await guild.members.fetch(dbMessage.authorID)).user;
+        const dbMessage = await Message.findOne({ messageID: oldMessage.id });
 
-        const auditoryChannel = guild.channels.cache.get(
-            require('../../config.json').AUDITORY_CHANNEL_ID
-        );
-        
-        auditoryChannel.send({embeds:
-            [{
-                description: "Un mensaje de <@" + author.id + "> fue **editado** en " + channel.url + "\nAntes: " + dbMessage.content + "\n\nDespues: " + newMessage.content,
-                author: { name: author.username, icon_url: author.displayAvatarURL() },
-                footer: { text: "ID de Autor: " + author.id + " | ID de mensaje: " + oldMessage.id },
-                color: 0x1F99E3 
-            }]
-        });
+        if (!dbMessage) {
+            console.warn(`⚠️ No se encontró el mensaje ${oldMessage.id} en la base de datos.`);
+            return;
+        }
 
         try {
+            const author = (await guild.members.fetch(dbMessage.authorID)).user;
+            const auditoryChannel = guild.channels.cache.get(config.AUDITORY_CHANNEL_ID);
+
+            auditoryChannel.send({
+                embeds: [{
+                    description: `Un mensaje de <@${author.id}> fue **editado** en ${channel}\n\n📥 **Antes:** ${dbMessage.content}\n📤 **Después:** ${newMessage.content}`,
+                    author: { name: author.username, icon_url: author.displayAvatarURL() },
+                    footer: { text: `ID de Autor: ${author.id} | ID de mensaje: ${oldMessage.id}` },
+                    color: 0x1F99E3
+                }]
+            });
+
             await Message.updateOne(
-                { messageID: oldMessage.id }, // filtro
-                { $set: { content: newMessage.content }} // nueva info
+                { messageID: oldMessage.id },
+                { $set: { content: newMessage.content } }
             );
-        } catch (e) {
-            console.err(e);
+        } catch (err) {
+            console.error('❌ Error al procesar messageUpdate:', err);
         }
     }
 };
