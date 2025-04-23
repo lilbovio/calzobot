@@ -3,13 +3,13 @@ module.exports = {
     async execute(interaction, client) {
       if (!interaction.isChatInputCommand()) return;
   
-      const command = client.commands.get(interaction.commandName);
-      if (!command) return;
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
   
-      try {
-        await command.execute(interaction, client);
-      } catch (error) {
-        console.error("❌ Error ejecutando el comando:", error);
-      }
+        try {
+            await command.execute(interaction, client);
+        } catch (error) {
+            console.error("❌ Error ejecutando el comando:", error);
+        }
     },
   };
