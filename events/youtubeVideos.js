@@ -33,7 +33,7 @@ module.exports = {
           .setColor('Red')
           .setTimestamp();
 
-        await videosChannel.send({ embeds: [embed] });
+        await videosChannel.send({ content: `@everyone`, embeds: [embed] });
       } catch (error) {
         console.error('Error al verificar nuevos videos de YouTube:', error);
       }
