@@ -1,7 +1,5 @@
 {
-    "TOKEN": "MTM0NTYxNTMzMjcxODQxMTc3Nw.GK2OgY.4vUR5YamK8fLhhyIvbd7vPOPSLDIGUEo_HmImE",
-    "MONGO_URI": "mongodb+srv://jboviovallejo:37lCVgJ126iV01xU@calzbot.u0cre.mongodb.net/?retryWrites=true&w=majority&appName=calzbot",
-    "PREFIX": "!",
+    "PREFIX": "c!",
     "OWNER_ID": "848838967620403200",
     "CLIENT_ID": "1345615332718411777",
     "GUILD_ID": "1355738872205545564",
@@ -9,7 +7,6 @@
     "REPORT_CHANNEL_ID": "1355785240693571654",
     "AUDITORY_CHANNEL_ID": "135578530708115057",
     "JAIL_ROLE_ID": "1355738872205545565",
-    "youtubeApiKey": "AIzaSyBIsxUNGiWalQbF1x5JKmVPCsKpKsdPh-I",
     "youtubeChannelId": "UCO9hQOBp3C_cTrVbMWOUyhg",
     "videosChannel": "1355738874713739603",
     "MOD_ROLES": [

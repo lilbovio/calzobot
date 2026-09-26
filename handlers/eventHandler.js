@@ -2,32 +2,42 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = (client) => {
-    // const eventFiles = fs.readdirSync(path.join(__dirname, '../events')).filter(file => file.endsWith('.js'));
-
     const eventDirs = [
-        path.join(__dirname, '../events'),
-        path.join(__dirname, '../events/auditored') // Agregar rutas internas
+        path.join(__dirname, '..', 'events'),
+        path.join(__dirname, '..', 'events', 'auditored') // opcional, si existe
     ];
-    
+
+    // Recolectar archivos .js existentes en las rutas
     const eventFiles = eventDirs.flatMap(dir =>
-        fs.existsSync(dir) ?
-            fs.readdirSync(dir).filter(file => file.endsWith('.js'))
-                .map(file => path.join(dir, file)) // agrega la ruta al nombre de cada archivo
+        fs.existsSync(dir)
+            ? fs.readdirSync(dir).filter(f => f.endsWith('.js')).map(f => path.join(dir, f))
             : []
     );
 
-    for (const file of eventFiles) {
-        // const event = require(`../events/${file}`);
+    for (const filePath of eventFiles) {
+        let event;
+        try {
+            delete require.cache[require.resolve(filePath)];
+            event = require(filePath);
+        } catch (err) {
+            console.error('Error cargando event:', filePath, err);
+            continue;
+        }
 
-        const event = require(file);
+        if (!event || !event.name || typeof event.execute !== 'function') {
+            console.warn('Event inválido o sin execute():', filePath);
+            continue;
+        }
 
-        if (event.once) {
-            client.once(event.name, (...args) => event.execute(...args));
-        } else {
-            // Verifica si la función `execute` espera `client`
-            client.on(event.name, (...args) => {
-                event.execute(...args, client);
-            });
+        try {
+            if (event.once) {
+                client.once(event.name, (...args) => event.execute(...args, client));
+            } else {
+                client.on(event.name, (...args) => event.execute(...args, client));
+            }
+            console.log(`Event cargado: ${event.name} ${event.once ? '(once)' : ''} -> ${path.relative(process.cwd(), filePath)}`);
+        } catch (err) {
+            console.error('Error registrando event:', filePath, err);
         }
     }
 };

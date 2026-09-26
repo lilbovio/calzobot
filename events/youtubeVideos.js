@@ -17,7 +17,7 @@ module.exports = {
     setInterval(async () => {
       try {
         const response = await axios.get(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${config.youtubeChannelId}&maxResults=1&order=date&type=video&key=${config.youtubeApiKey}`
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${config.youtubeChannelId}&maxResults=1&order=date&type=video&key=${process.env.YOUTUBE_API_KEY}`
         );
 
         const latestVideo = response.data.items[0];
