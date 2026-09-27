@@ -22,10 +22,20 @@ const config = {
 };
 
 const loadEvents = require('./handlers/eventHandler.js');
+const prefixService = require('./services/prefixService.js');
+const afkService = require('./services/afkService.js');
+const { createMessageHandler } = require('./utils/interactionCompat.js');
 const { Partials } = require('discord.js');
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+    // MessageContent es privilegiado: sin el, message.content llega vacio y
+    // los comandos por prefijo no se pueden detectar. Habilitalo en el Developer Portal.
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
     //partials: [Partials.Message]
 });
 
@@ -36,6 +46,8 @@ const commandFolders = fs.readdirSync(commandsPath);
 
 for (const folder of commandFolders) {
     const folderPath = path.join(commandsPath, folder);
+    if (!fs.statSync(folderPath).isDirectory()) continue;
+
     const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
 
     for (const file of commandFiles) {
@@ -47,7 +59,6 @@ for (const folder of commandFolders) {
             console.error('Error require comando:', filePath, err);
             continue;
         }
-        console.log('Comandos cargados:', [...client.commands.keys()]); // <-- línea nueva
 
         // Helper para crear data por defecto si hace falta
         const defaultData = (name) => new SlashCommandBuilder().setName(name.toLowerCase()).setDescription('Comando generado automáticamente');
@@ -96,6 +107,7 @@ for (const folder of commandFolders) {
 
             // Si solo tiene executeMessage, crea wrapper para interaction
             if (!raw.execute && typeof raw.executeMessage === 'function') {
+                const messageHandler = raw.executeMessage;
                 raw.execute = async (interaction, client) => {
                     const fakeMessage = {
                         author: interaction.user,
@@ -109,7 +121,7 @@ for (const folder of commandFolders) {
                         }
                     };
                     try {
-                        await raw.executeMessage(fakeMessage, [], client);
+                        await messageHandler(fakeMessage, [], client);
                     } catch (err) {
                         console.error(`Error executing command ${raw.data.name} (slash wrapper):`, err);
                         if (!interaction.replied) await interaction.reply({ content: '❌ Error al ejecutar el comando.', ephemeral: true }).catch(()=>{});
@@ -117,21 +129,9 @@ for (const folder of commandFolders) {
                 };
             }
 
-            // Si tiene execute pero no executeMessage, crea wrapper para mensajes
+            // Si tiene execute pero no executeMessage, genera uno compatible con prefijo
             if (!raw.executeMessage && typeof raw.execute === 'function') {
-                raw.executeMessage = async (message, args, client) => {
-                    try {
-                        // Intentar distintas firmas comunes
-                        await raw.execute(message, args, client);
-                    } catch (err) {
-                        try {
-                            await raw.execute(message, client, args);
-                        } catch (err2) {
-                            console.error(`Error executing command ${raw.data.name} (message wrapper):`, err2);
-                            try { await message.reply('❌ Ocurrió un error al ejecutar el comando.'); } catch (e) {}
-                        }
-                    }
-                };
+                raw.executeMessage = createMessageHandler(raw);
             }
 
             command = raw;
@@ -150,12 +150,14 @@ for (const folder of commandFolders) {
     }
 }
 
+console.log(`Comandos cargados: ${client.commands.size} -> ${[...client.commands.keys()].join(', ')}`);
+
 // Cargar eventos
 loadEvents(client);
 
 client.once('ready', async () => {
     console.log(`✅ Bot iniciado como ${client.user.tag}`);
-    const logChannel = client.channels.cache.get("1355785307081150575");
+    const logChannel = client.channels.cache.get(config.LOG_CHANNEL_ID);
     if (logChannel) {
         const embed = new EmbedBuilder()
             .setColor(0x00ff00)
@@ -165,7 +167,7 @@ client.once('ready', async () => {
         logChannel.send({ embeds: [embed] });
     }
     client.user.setPresence({
-        activities: [{ name: 'Bro maceta...', type: 0 }], // Cambia el nombre del estado
+        activities: [{ name: 'Nuevo sistema de economia, juegalo!', type: 0 }], // Cambia el nombre del estado
         status: 'dnd' // Opciones: 'online', 'idle', 'dnd' (No molestar), 'invisible'
     });
     
@@ -185,24 +187,28 @@ client.once('ready', async () => {
     }
 });
 
-// Conectar a MongoDB
-mongoose.connect(config.MONGO_URI, { useNewUrlParser: true })
-    .then(() => console.log('✅ Conectado a MongoDB'))
-    .catch(err => console.error('❌ Error al conectar a MongoDB:', err));
+// Conectar a MongoDB antes de iniciar sesión: los servicios de economía
+// requieren transacciones, así que no tiene sentido aceptar comandos sin base de datos.
+async function connectMongo() {
+    try {
+        await mongoose.connect(config.MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+        console.log('✅ Conectado a MongoDB');
 
-// Cargar eventos
-/*const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
-
-for (const file of eventFiles) {
-    const event = require(`./events/${file}`);
-    if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client));
-    } else {
-        client.on(event.name, (...args) => event.execute(...args, client));
+        const hello = await mongoose.connection.db.admin().command({ hello: 1 });
+        const supportsTransactions = Boolean(hello.setName) || hello.msg === 'isdbgrid';
+        if (supportsTransactions) {
+            console.log(`✅ MongoDB con soporte de transacciones (${hello.setName || 'sharded cluster'})`);
+        } else {
+            console.warn('⚠️ MongoDB parece ser un deployment standalone: las transacciones de economía y apuestas van a fallar. Configuralo como replica set.');
+        }
+    } catch (err) {
+        console.error('❌ Error al conectar a MongoDB:', err.message);
     }
-}
-    MOVIDO A handlers/eventHandler.js
-*/
 
-client.login(config.TOKEN);
+    await prefixService.load();
+    console.log(`Prefijos por defecto: ${prefixService.defaultPrefixes().join(', ')}`);
+    await afkService.load();
+    await client.login(config.TOKEN);
+}
+
+connectMongo();

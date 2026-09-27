@@ -1,24 +1,19 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const AFK = require('../../models/afkSchema');
+const afkService = require('../../services/afkService');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('afk')
         .setDescription('Ponerse en estado AFK.')
-        .addStringOption(option =>
-            option.setName('razon')
-                .setDescription('Razón de por qué estás AFK.')
-                .setRequired(false)
-        ),
-        
-    async execute(interaction) {
-        const reason = interaction.options.getString('razon') || "Sin razón";
+        .addStringOption(option => option
+            .setName('razon')
+            .setDescription('Razón de por qué estás AFK.')
+            .setMaxLength(300)
+            .setRequired(false)),
 
-        await AFK.findOneAndUpdate(
-            { userId: interaction.user.id },  // ← Cambiado a `userId`
-            { reason, timestamp: Date.now() },
-            { upsert: true, new: true }
-        );
+    async execute(interaction) {
+        const reason = (interaction.options.getString('razon') || 'Sin razón').slice(0, 300);
+        await afkService.set(interaction.user.id, reason);
 
         const embed = new EmbedBuilder()
             .setColor('Blue')
@@ -26,6 +21,6 @@ module.exports = {
             .setDescription(`Tu estado AFK ha sido activado.\n**Razón:** ${reason}`)
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
     }
 };

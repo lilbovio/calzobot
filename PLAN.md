@@ -4,7 +4,7 @@
 
 Add a virtual-coin economy to the Discord bot. Coins have no real-world value and cannot be purchased or redeemed. Members can earn coins, steal coins from other members, transfer coins, and wager coins in staff-created prediction markets such as “Who wins: Lakers or Knicks?”
 
-This is a design proposal only. Values marked **Proposed** can be changed before implementation.
+This document is the agreed design. The values under **Confirmed** were reviewed and approved; they can still be changed later by editing the constants in `services/economyService.js` and `services/betService.js`.
 
 ## Design Principles
 
@@ -25,7 +25,7 @@ Show the caller's balance, or the selected member's balance if provided. This is
 
 Award a random amount of coins within configurable minimum and maximum values. Enforce a persisted cooldown for each member in each server. Ignore bot accounts.
 
-**Proposed values to review:** reward range `100–250` coins, cooldown `1 hour`.
+**Confirmed values:** reward range `100–250` coins, cooldown `1 hour`.
 
 ### `/steal user`
 
@@ -33,7 +33,7 @@ Attempt to take coins from another member. Block self-targets and bot accounts. 
 
 On a failed attempt, either apply a fine or award nothing. Do not allow a target's balance to fall below zero. The exact odds, amount limits, cooldown, and failure penalty should be configurable or constants centralized in the economy service.
 
-**Proposed values to review:** `40%` success chance, steal `10–20%` of the target's balance with minimum and maximum caps, `2 hour` cooldown, failure fine of `10%` of the attempted amount capped at a fixed maximum. The fine is a coin sink, not a transfer to another member.
+**Confirmed values:** `40%` success chance, steal `10–20%` of the target's balance with a minimum of `25` and a maximum of `500` coins, `2 hour` cooldown, failure fine of `10%` of the attempted amount capped at `100` coins. The fine is a coin sink, not a transfer to another member.
 
 ### `/transfer user amount`
 
@@ -54,7 +54,7 @@ All market-management commands require the caller to have a role listed in the e
 Create a market with:
 
 - A question/title, for example “Who wins: Lakers or Knicks?”
-- Two or more outcomes, for example `Lakers win` and `Knicks win` (optionally `Tie`).
+- Between two and five outcomes, for example `Lakers win` and `Knicks win` (optionally `Tie`).
 - A closing time or duration.
 - Optional description/rules to remove ambiguity about what counts as the result.
 
@@ -68,7 +68,7 @@ List open markets and show a market's status, outcomes, closing time, total pool
 
 A member chooses one outcome and stakes a positive whole-number amount. The stake is removed from their available wallet balance and recorded against the market. Reject wagers on closed, settled, or cancelled markets, wagers placed after the close time, insufficient balances, and invalid outcome selections.
 
-**Proposed v1 wager rule:** one selection per member per market. Members may add more coins to the same outcome before close, but cannot switch outcomes or hedge on another outcome. A unique `(guildId, betId, userId)` wager record enforces this rule.
+**Confirmed v1 wager rule:** one selection per member per market. Members may add more coins to the same outcome before close, but cannot switch outcomes or hedge on another outcome. A unique `(guildId, betId, userId)` wager record enforces this rule.
 
 ### `/bet close id`
 
@@ -78,7 +78,7 @@ Allow staff to close a market early. Regardless of whether a staff command has r
 
 After the result is known, staff selects the winning outcome. Settle the market exactly once, pay winning wagers, and record who resolved it and when.
 
-**Proposed safeguard:** a market's creator cannot resolve their own market; another authorized staff member must resolve it. This is optional and can be changed.
+**Confirmed safeguard:** a market's creator cannot resolve their own market; another authorized staff member must resolve it.
 
 ### `/bet cancel id reason`
 
@@ -95,7 +95,7 @@ Let:
 - `feeRate` = the configurable fee taken from the losing pool.
 - `stake` = one winning member's stake.
 
-Proposed fee: `5%` of the losing pool. The fee is a coin sink that helps limit inflation from `/work`.
+Confirmed fee: `5%` of the losing pool. The fee is a coin sink that helps limit inflation from `/work`.
 
 Estimated/final gross payout multiplier:
 
@@ -186,17 +186,75 @@ The existing startup command loader scans command folders and registers slash-co
 - Simultaneous wagers cannot overspend; repeated settlement cannot duplicate payouts.
 - Every bet transaction and market status change is reflected in the ledger/audit fields.
 
-## Decisions for Review
+## Confirmed Decisions
 
-1. Are the proposed `/work` reward range and cooldown suitable?
-2. Should `/steal` use the proposed success chance, amount range, cooldown, and failure fine?
-3. Is a `5%` fee on losing wagers acceptable as a coin sink, or should v1 have no fee?
-4. Should members be allowed to add to their existing wager on one outcome, or should each member make exactly one fixed wager per market?
-5. Should market creators be prevented from resolving their own markets?
-6. Should markets support only two outcomes initially, or allow three or more (for example, a tie)?
-7. Should betting be available in every channel, or limited to a configured economy channel?
-8. Should there be a maximum bet amount, maximum open markets, or maximum total pool?
-9. Confirm that the MongoDB deployment supports transactions before implementing atomic transfers and settlement.
+1. `/work`: reward range `100–250` coins, cooldown `1 hour`. Accepted as proposed.
+2. `/steal`: `40%` success, `10–20%` of the target's balance (min `25`, max `500`), `2 hour` cooldown, failure fine of `10%` capped at `100`. Accepted as proposed.
+3. Fee: `5%` of the losing pool on settlement. Kept as a coin sink.
+4. Wagers: one selection per member per market, with top-ups allowed on that same outcome.
+5. Market creators cannot resolve their own markets.
+6. Markets support between `2` and `5` outcomes, so a `Tie` option is possible.
+7. No channel restriction: economy and betting commands work in every channel of the server.
+8. No limits in v1: no maximum bet, no cap on open markets, no cap on total pool. Only positive-integer and balance validation.
+9. MongoDB transactions are in use. The deployment must be a replica set or sharded cluster; a standalone `mongod` is not supported. If it is not, every economy command answers with a clear configuration error instead of failing silently.
+
+## Build Status
+
+Steps 1 through 5 of the build sequence are implemented. Step 6 (history and quality-of-life features) is pending.
+
+Implemented files:
+
+- `models/walletSchema.js`, `models/economyLedgerSchema.js`, `models/betMarketSchema.js`, `models/wagerSchema.js`
+- `services/economyService.js` (balance changes, cooldowns, work/steal/transfer, ledger writes)
+- `services/betService.js` (market creation and validation, wagers, pool totals, odds, close, resolve, cancel, refunds)
+- `utils/permissions.js` (`MOD_ROLES` check), `utils/format.js`, `utils/economyErrors.js`
+- `commands/economy/balance.js`, `work.js`, `steal.js`, `transfer.js`, `bet.js`
+- `events/interactionCreate.js` now dispatches autocomplete interactions
+
+Deviation from the proposal: `bet_fee` ledger entries are written with a null `userId` and a null `balanceAfter`, because the fee leaves circulation instead of moving between wallets.
+
+## Prefix Command Support
+
+Every slash command also answers to a text prefix. `utils/interactionCompat.js` derives the option
+list from each command's `SlashCommandBuilder`, converts the Discord option objects into plain
+strings, and reuses the command's own `execute`, so there is a single implementation per command.
+
+- `services/prefixService.js` keeps one prefix per guild in `models/prefixSchema.js` (unique on
+  `guildId`) and falls back to `config.PREFIX` when a guild has no override.
+- `events/messageCreate.js` resolves the prefix, parses the token, checks `isStaff` when the
+  command is staff-only, routes the call, and returns the payload to `message.reply`.
+- `index.js` attaches `executeMessage` to every command that does not define one.
+- Accepted syntax: positional (`c!bet wager A1B2C3 o1 500`) and keyed (`monto=500`,
+  `duracion:1h`). The last free-text option absorbs the remaining tokens, so
+  `c!bet cancel A1B2C3 evento cancelado por error` keeps the whole reason. A repeated key keeps
+  the first value.
+- `commands/moderation/setprefix.js` requires staff, validates a maximum of 5 non-whitespace
+  characters, and updates the cache immediately.
+- `commands/utility/afk.js` moved to `services/afkService.js`, which caches the AFK state in
+  memory and only queries Mongo on startup.
+
+## Configuration Fixes
+
+- `MONGO_URI` had no database in its path, so Mongoose fell back to the database `test`. The path
+  is now `/calzbot`. The deployment is an Atlas replica set and supports transactions.
+- `config.json` contained a JSON comment that made `require('./config.json')` throw. The comment
+  was removed and the alternate application id was kept as `CLIENT_ID_ALT`.
+- `models/prefixSchema.js` had no unique index on `guildId`; concurrent `/setprefix` calls could
+  have created duplicate documents.
+- `models/afkSchema.js` accepted an unbounded `reason`, which could exceed the Discord embed
+  description limit. It is now capped at 300 characters, matching the command option.
+- `models/betMarketSchema.js` only enforced the two-to-five outcome rule in the service. The
+  schema now validates it too, so no invalid market can be stored.
+
+## Verification
+
+- 58 checks over configuration, module loading, command builders, prefix parsing, payout math
+  (19,600 combinations), formatting and permissions.
+- 44 checks over the prefix shim alone, including keyed parsing, free text, repeated keys and
+  unknown options.
+- A live smoke test against the real database confirmed the topology supports transactions,
+  created every unique index, and validated the model validators.
+
 
 ## Suggested Build Sequence
 

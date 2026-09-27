@@ -17,7 +17,7 @@ module.exports = {
     setInterval(async () => {
       try {
         const response = await axios.get(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${config.youtubeChannelId}&maxResults=1&order=date&type=video&key=${process.env.YOUTUBE_API_KEY}`
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${config.youtubeChannelId}&maxResults=1&order=date&type=video&key=${config.youtubeApiKey}`
         );
 
         const latestVideo = response.data.items[0];
@@ -33,7 +33,7 @@ module.exports = {
           .setColor('Red')
           .setTimestamp();
 
-        await videosChannel.send({ content: `@everyone`, embeds: [embed] });
+         await videosChannel.send({ embeds: [embed] });
       } catch (error) {
         console.error('Error al verificar nuevos videos de YouTube:', error);
       }
