@@ -4,6 +4,24 @@ const config = require('../config.json');
 
 let lastVideoId = null;
 
+async function fetchLatestVideo() {
+  // La key vive en el entorno, no en config.json: antes se leia de ahi y
+  // terminaba enviando "key=undefined", que YouTube responde con HTTP 400.
+  const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+    params: {
+      part: 'snippet',
+      channelId: config.youtubeChannelId,
+      maxResults: 1,
+      order: 'date',
+      type: 'video',
+      key: process.env.YOUTUBE_API_KEY
+    },
+    timeout: 10000
+  });
+
+  return response.data.items?.[0];
+}
+
 module.exports = {
   name: 'ready',
   once: true,
@@ -14,17 +32,18 @@ module.exports = {
       return;
     }
 
-    setInterval(async () => {
-      try {
-        const response = await axios.get(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${config.youtubeChannelId}&maxResults=1&order=date&type=video&key=${config.youtubeApiKey}`
-        );
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.error('❌ Falta YOUTUBE_API_KEY en el .env. No se van a avisar los videos nuevos.');
+      return;
+    }
 
-        const latestVideo = response.data.items[0];
+    const avisar = async () => {
+      try {
+        const latestVideo = await fetchLatestVideo();
         if (!latestVideo) return;
 
-        const videoId = latestVideo.id.videoId;
-        if (videoId === lastVideoId) return;
+        const videoId = latestVideo.id?.videoId;
+        if (!videoId || videoId === lastVideoId) return;
         lastVideoId = videoId;
 
         const embed = new EmbedBuilder()
@@ -33,10 +52,20 @@ module.exports = {
           .setColor('Red')
           .setTimestamp();
 
-         await videosChannel.send({ embeds: [embed] });
+        await videosChannel.send({ embeds: [embed] });
       } catch (error) {
-        console.error('Error al verificar nuevos videos de YouTube:', error);
+        // Solo el mensaje de la API: volcar el AxiosError entero llena el log
+        // de ruido cada 5 minutos y esconde la causa real.
+        const apiError = error.response?.data?.error;
+        if (apiError) {
+          console.error(`Error de la API de YouTube (${error.response.status}): ${apiError.message}`);
+        } else {
+          console.error('No se pudo consultar YouTube:', error.message);
+        }
       }
-    }, 5 * 60 * 1000); // Verifica cada 5 minutos
+    };
+
+    await avisar();
+    setInterval(avisar, 5 * 60 * 1000);
   },
 };
